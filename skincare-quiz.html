@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Skincare Routine | Premium Experience</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+
+  <style>
+    /* =========================================
+       FIX #3 — SISTEMA DE TOKENS (Clean Code)
+       ========================================= */
+    :root {
+      --text-main:   #111111;
+      --text-gray:   #595959;   /* FIX #1 — era #828282 (falha WCAG AA) */
+      --text-light:  #767676;   /* FIX #1 — era #BDBDBD (falha WCAG AA) */
+      --beige-bg:    #F7F6F3;
+      --btn-border:  #E5E5E5;
+
+      /* Escala de raios */
+      --radius-sm:   8px;
+      --radius-md:   14px;
+      --radius-lg:   20px;
+      --radius-pill: 100px;
+
+      /* Escala de espaçamento */
+      --space-sm:  12px;
+      --space-md:  20px;
+      --space-lg:  30px;
+      --space-xl:  45px;
+
+      /* Elevações */
+      --shadow-card: 0 4px 15px rgba(0,0,0,0.04);
+      --shadow-btn:  0 8px 25px rgba(0,0,0,0.06);
+      --shadow-lg:   0 50px 100px rgba(0,0,0,0.9);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    /* FIX #1 — Foco visível para navegação por teclado */
+    :focus-visible {
+      outline: 2px solid var(--text-main);
+      outline-offset: 3px;
+      border-radius: var(--radius-sm);
+    }
+
+    body {
+      background: #000;
+      display: flex; justify-content: center; align-items: center;
+      min-height: 100vh;
+      font-family: 'DM Sans', sans-serif;
+      overflow: hidden; color: var(--text-main);
+    }
+
+    .app-container {
+      width: 100%; height: 100vh; max-width: 430px; max-height: 932px;
+      position: relative; overflow: hidden;
+      background-color: var(--beige-bg);
+    }
+    @media (min-width: 500px) {
+      .app-container {
+        border: 12px solid #1a1a1a;
+        border-radius: 40px;
+        height: 812px;
+        box-shadow: var(--shadow-lg);
+      }
+    }
+
+    /* =========================================
+       QUIZ
+       ========================================= */
+    #quiz-view {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: var(--beige-bg); display: flex; flex-direction: column;
+      padding: var(--space-lg) 25px 40px; z-index: 300;
+      transition: opacity 0.5s ease;
+    }
+
+    .quiz-top-nav {
+      display: flex; align-items: center;
+      margin-bottom: 25px; height: 30px;
+    }
+
+    /* FIX #1 — aria-label adicionado no HTML, estilo mantido */
+    .btn-back-arrow {
+      background: none; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      width: 30px; height: 30px; margin-left: -10px;
+    }
+
+    .progress-bar {
+      width: 100%; height: 3px;
+      background: var(--btn-border);
+      margin-bottom: 20px;
+    }
+    .progress-fill {
+      height: 100%; background: var(--text-main);
+      width: 0%; transition: width 0.4s ease;
+    }
+
+    .step-counter {
+      font-size: 11px; font-weight: 600;
+      color: var(--text-gray); /* FIX #1 — contraste corrigido */
+      letter-spacing: 1.5px; text-transform: uppercase;
+      margin-bottom: 20px; display: block;
+    }
+
+    .question-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 26px; font-weight: 400;
+      line-height: 1.3; margin-bottom: 10px;
+      color: var(--text-main);
+    }
+    .question-subtitle {
+      font-size: 13px; color: var(--text-gray);
+      margin-bottom: 35px; min-height: 15px;
+    }
+
+    .options-list {
+      display: flex; flex-direction: column;
+      gap: var(--space-sm); flex: 1;
+      overflow-y: auto; padding-bottom: 20px;
+    }
+
+    /* FIX #3 — base compartilhada entre botões interativos */
+    .interactive-btn {
+      border: 1px solid var(--btn-border);
+      border-radius: var(--radius-md);
+      background: #fff;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: var(--shadow-card);
+    }
+
+    /* FIX #1 — CSS puro válido: propriedades consolidadas, sem sintaxe SCSS */
+    .option-btn {
+      padding: var(--space-md);
+      text-align: left;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      /* herdado de .interactive-btn via multiclass no HTML */
+    }
+
+    .option-btn.selected { border-color: var(--text-main); background: #FAFAFA; }
+
+    .circle-check {
+      width: 20px; height: 20px; border-radius: 50%;
+      border: 1.5px solid var(--text-light);
+      display: flex; align-items: center; justify-content: center;
+      transition: 0.2s; flex-shrink: 0;
+    }
+    .option-btn.selected .circle-check { border-color: var(--text-main); }
+    .option-btn.selected .circle-check::after {
+      content: ''; width: 10px; height: 10px;
+      background: var(--text-main); border-radius: 50%;
+    }
+
+    .quiz-footer { margin-top: auto; padding-top: 10px; }
+
+    .btn-next {
+      width: 100%; padding: 18px;
+      border-radius: var(--radius-pill);
+      font-size: 15px; font-weight: 600;
+      font-family: 'DM Sans', sans-serif;
+      background: var(--text-gray); color: #FFF;
+      border: none; cursor: not-allowed; transition: 0.3s;
+    }
+    .btn-next.active {
+      background: var(--text-main); cursor: pointer;
+      box-shadow: var(--shadow-btn);
+    }
+    .btn-next:active { transform: scale(0.98); }
+
+    /* FIX #1 — estado disabled explícito */
+    .btn-next:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* =========================================
+       LOADING
+       ========================================= */
+    #loading-view {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: var(--beige-bg); color: var(--text-main);
+      display: none; flex-direction: column;
+      align-items: center; justify-content: center; z-index: 300;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 2px solid rgba(0,0,0,0.05);
+      border-top-color: var(--text-main);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 25px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* =========================================
+       RESULTADOS
+       ========================================= */
+    #result-view {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background-color: var(--beige-bg);
+      display: none; flex-direction: column; z-index: 200;
+    }
+
+    .bg-aura {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 300px; height: 300px; border-radius: 50%;
+      filter: blur(80px); z-index: 0; opacity: 0.4;
+      background: radial-gradient(circle, #E5E5E5 0%, transparent 70%);
+      transition: background 1.5s ease; pointer-events: none;
+    }
+
+    .global-header {
+      position: absolute; top: var(--space-xl); width: 100%;
+      padding: 0 25px; display: flex;
+      justify-content: center; align-items: center; z-index: 100;
+    }
+    .step-indicator {
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 3px; text-transform: uppercase;
+      color: var(--text-main); background: rgba(255,255,255,0.6);
+      padding: 8px 18px; border-radius: var(--radius-pill);
+      backdrop-filter: blur(10px);
+    }
+    .cart-mini {
+      position: absolute; right: 25px;
+      background: white; width: 42px; height: 42px;
+      border-radius: 50%; display: flex;
+      align-items: center; justify-content: center;
+      box-shadow: var(--shadow-card); cursor: pointer;
+      border: none;
+    }
+    .cart-badge {
+      position: absolute; top: -3px; right: -3px;
+      background: var(--text-main); color: white;
+      font-size: 10px; width: 18px; height: 18px;
+      border-radius: 50%; display: none;
+      align-items: center; justify-content: center; font-weight: 700;
+    }
+
+    .swiper { width: 100%; height: 100%; z-index: 10; }
+    .swiper-slide {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: space-between;
+      padding: 120px 24px 50px;
+    }
+
+    .title-group { text-align: center; z-index: 50; }
+    .title-group h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 28px; font-weight: 400;
+      color: var(--text-main); letter-spacing: -0.5px; margin-bottom: 6px;
+    }
+    .title-group .brand {
+      font-size: 11px; font-weight: 600;
+      color: var(--text-gray); /* FIX #1 — contraste corrigido */
+      text-transform: uppercase; letter-spacing: 2px;
+    }
+
+    .img-container {
+      flex: 1; width: 100%;
+      display: flex; align-items: center;
+      justify-content: center;
+      position: relative; z-index: 20;
+    }
+
+    /* FIX #2 — placeholder enquanto imagem carrega */
+    .product-img-wrapper {
+      position: relative;
+      width: 65%; aspect-ratio: 1;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .product-img-placeholder {
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, #f0f0ec, #e8e7e2);
+      border-radius: var(--radius-lg);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-light); font-size: 11px;
+      letter-spacing: 1px; text-transform: uppercase;
+      opacity: 1; transition: opacity 0.4s ease;
+    }
+    .product-img-placeholder.hidden { opacity: 0; pointer-events: none; }
+
+    .product-img {
+      width: 100%; height: auto; object-fit: contain;
+      transform: scale(3.5) translateY(-15px);
+      filter: drop-shadow(0 30px 40px rgba(0,0,0,0.1));
+      cursor: pointer;
+      opacity: 0; transition: opacity 0.4s ease;
+    }
+    .product-img.loaded { opacity: 1; }
+
+    .footer-content {
+      width: 100%; display: flex;
+      flex-direction: column; align-items: center;
+      gap: var(--space-md); z-index: 50;
+    }
+
+    .btn-pill {
+      display: flex; align-items: center;
+      justify-content: center; gap: 10px;
+      background: #FFFFFF; border: none;
+      padding: 16px 35px; border-radius: var(--radius-pill);
+      font-size: 14px; font-weight: 600;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text-main); cursor: pointer;
+      box-shadow: var(--shadow-btn);
+      transition: transform 0.2s ease;
+      width: 100%; max-width: 280px;
+    }
+    .btn-pill:active { transform: scale(0.96); }
+
+    /* =========================================
+       OVERLAYS
+       ========================================= */
+    .overlay {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(247, 246, 243, 0.98);
+      backdrop-filter: blur(20px); z-index: 400;
+      transform: translateY(100%);
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex; flex-direction: column;
+    }
+    .overlay.active { transform: translateY(0); }
+    .overlay-header {
+      display: flex; align-items: center;
+      justify-content: center;
+      padding: var(--space-xl) 25px 25px;
+      position: relative;
+    }
+    .btn-close {
+      position: absolute; left: 25px;
+      background: none; border: none;
+      font-size: 12px; font-weight: 600;
+      color: var(--text-gray); text-transform: uppercase; cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .overlay h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 28px; font-weight: 400;
+      color: var(--text-main); margin-bottom: 25px; text-align: center;
+    }
+    .overlay h4 {
+      font-size: 11px; text-transform: uppercase;
+      letter-spacing: 2px; color: var(--text-gray);
+      margin-bottom: 8px; font-weight: 600;
+    }
+    .overlay p {
+      font-size: 15px; line-height: 1.6;
+      color: #444; margin-bottom: 25px; font-weight: 400;
+    }
+    .bag-list { flex: 1; overflow-y: auto; padding: 0 25px; }
+    .bag-item {
+      display: flex; align-items: center; gap: 15px;
+      padding: 15px; background: white;
+      border-radius: var(--radius-lg); margin-bottom: var(--space-sm);
+      border: 1px solid var(--btn-border);
+    }
+    .bag-item-num {
+      font-size: 11px; font-weight: 700; color: #111;
+      width: 24px; height: 24px; background: #F0F0F0;
+      border-radius: 50%; display: flex;
+      align-items: center; justify-content: center; flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+
+    <!-- FASE 1: QUIZ -->
+    <!-- FIX #1 — role="main" e aria semântico -->
+    <main id="quiz-view" role="main" aria-label="Quiz de Skincare">
+      <div class="quiz-top-nav">
+        <!-- FIX #1 — aria-label descritivo + aria-hidden no SVG -->
+        <button
+          class="btn-back-arrow"
+          id="btn-prev"
+          onclick="goPrev()"
+          aria-label="Voltar para a pergunta anterior"
+          style="visibility: hidden;"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+      </div>
+
+      <!-- FIX #1 — aria-valuemin/max/now para leitores de tela -->
+      <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress-bar">
+        <div class="progress-fill" id="progress"></div>
+      </div>
+      <span class="step-counter" aria-live="polite"><span id="step-count">1</span> DE 9</span>
+
+      <!-- FIX #1 — heading semântico -->
+      <h1 class="question-title" id="q-title"></h1>
+      <p class="question-subtitle" id="q-subtitle"></p>
+
+      <!-- FIX #1 — role="group" com label associado -->
+      <div class="options-list" id="q-options" role="group" aria-labelledby="q-title"></div>
+
+      <div class="quiz-footer">
+        <!-- FIX #1 — disabled como atributo HTML real + aria-live -->
+        <button class="btn-next" id="btn-next" onclick="goNext()" disabled aria-live="polite">
+          Avançar
+        </button>
+      </div>
+    </main>
+
+    <!-- FASE 2: LOADING -->
+    <div id="loading-view" role="status" aria-label="Desenvolvendo sua rotina personalizada">
+      <div class="spinner" aria-hidden="true"></div>
+      <p style="font-size: 14px; font-weight: 500; letter-spacing: 1px; color: #666;">Desenvolvendo sua rotina...</p>
+    </div>
+
+    <!-- FASE 3: RESULTADOS -->
+    <div id="result-view">
+      <div class="bg-aura" id="aura" aria-hidden="true"></div>
+
+      <header class="global-header">
+        <div class="step-indicator" id="step-text" aria-live="polite">1º PASSO</div>
+        <!-- FIX #1 — button semântico com aria-label -->
+        <button class="cart-mini" onclick="openBag()" aria-label="Ver minha rotina">
+          <div class="cart-badge" id="cart-badge" aria-hidden="true">0</div>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" aria-hidden="true"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+        </button>
+      </header>
+
+      <div class="swiper mySwiper" role="region" aria-label="Produtos da sua rotina">
+        <div class="swiper-wrapper" id="wrapper"></div>
+      </div>
+
+      <!-- FIX #2 — canvas removido do DOM, criado dinamicamente só quando necessário -->
+    </div>
+
+    <!-- OVERLAY: DETALHES -->
+    <div class="overlay" id="detail-overlay" role="dialog" aria-modal="true" aria-labelledby="d-title">
+      <div class="overlay-header">
+        <button class="btn-close" onclick="closeDetails()" aria-label="Fechar detalhes do produto">✕ Fechar</button>
+      </div>
+      <div style="padding: 0 30px; overflow-y: auto;">
+        <h2 id="d-title"></h2>
+        <h4>O que é</h4><p id="d-what"></p>
+        <h4>Como usar</h4><p id="d-how"></p>
+        <button class="btn-pill" id="btn-add-detail" style="background:#111; color:#fff; margin-top:20px; max-width:100%;">Adicionar à rotina</button>
+      </div>
+    </div>
+
+    <!-- OVERLAY: SACOLA -->
+    <div class="overlay" id="bag-overlay" role="dialog" aria-modal="true" aria-label="Minha Rotina">
+      <div class="overlay-header">
+        <button class="btn-close" onclick="closeBag()" aria-label="Fechar sacola">✕ Fechar</button>
+        <div style="font-size:16px; font-weight:500; color:#111;">Minha Rotina</div>
+      </div>
+      <div class="bag-list" id="bag-list" aria-live="polite"></div>
+      <div style="padding: 25px; display: flex; justify-content: center; width: 100%;">
+        <button class="btn-pill" style="background:#111; color:#fff; width:100%; max-width:320px; font-size:15px; padding:18px;" onclick="alert('Indo para o Checkout...')">
+          Finalizar Compra
+        </button>
+      </div>
+    </div>
+
+  </div><!-- .app-container -->
+
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
+  <script>
+  /* =============================================
+     FIX #4 — BANCO DE PRODUTOS com themeColor
+     (substitui extração de cor via canvas/CORS)
+     ============================================= */
+  const BANCO_DE_PRODUTOS = [
+    { id: 101, name: "Centella Cleansing Oil",    brand: "SKIN1004", passo: "Limpeza",    tipo_pele: ["Oleosa","Mista","Normal","Seca"],    condicoes: ["Acne","Poros"],           themeColor: "180,210,190", img: "https://www.skin1004.com/cdn/shop/files/skin1004-cleanser-200ml-madagascar-centella-light-cleansing-oil-1204112613_1440x.png?v=1762764548", what: "Óleo de limpeza leve que remove maquiagem e sebo sem obstruir poros.", how: "Massageie no rosto seco, emulsione com água e enxágue." },
+    { id: 102, name: "Hyaluronic Cleansing Foam", brand: "Isntree",  passo: "Limpeza",    tipo_pele: ["Seca","Normal","Sensível","Todos"],  condicoes: ["Desidratação","Sensibilidade"], themeColor: "200,225,240", img: "https://isntree.com/web/product/big/202302/c4f2e96d99676e1a7b458b9f1d2e53cc.png", what: "Espuma cremosa e hidratante que limpa sem repuxar.", how: "Faça espuma com água e massageie o rosto úmido." },
+
+    { id: 201, name: "Pore+ Dark Spot Pads",     brand: "Celimax",  passo: "Tônico",     tipo_pele: ["Oleosa","Mista","Normal"],          condicoes: ["Manchas","Poros","Acne"],  themeColor: "255,220,195", img: "https://celimaxglobal.com/cdn/shop/products/Celimax_Pore_Dark_Spot_Pad_01_1024x1024.png", what: "Almofadas tônicas clareadoras e refinadoras de poros.", how: "Passe o lado texturizado e depois o lado liso no rosto limpo." },
+    { id: 202, name: "Centella Toning Toner",    brand: "SKIN1004",  passo: "Tônico",     tipo_pele: ["Sensível","Seca","Todos"],          condicoes: ["Sensibilidade","Desidratação"], themeColor: "190,215,200", img: "https://www.skin1004.com/cdn/shop/files/skin1004-toner-210ml-madagascar-centella-toning-toner-1204112571_1440x.png?v=1762764547", what: "Tônico calmante com Centella Asiática e PHA para esfoliação leve.", how: "Aplique com as mãos ou algodão dando batidinhas." },
+
+    { id: 301, name: "Poremizing Fresh Ampoule", brand: "SKIN1004",  passo: "Tratamento", tipo_pele: ["Oleosa","Mista"],                  condicoes: ["Poros","Acne"],           themeColor: "210,230,255", img: "https://www.skin1004.com/cdn/shop/products/skin1004-ampoule-serum-100ml-poremizing-fresh-ampoule-38642870780150.png?v=1677149786", what: "Ampola de sal rosa que minimiza a aparência dos poros.", how: "Aplique 3 gotas após o tônico." },
+    { id: 302, name: "Vita C Dark Spot",         brand: "Goodal",    passo: "Tratamento", tipo_pele: ["Todos"],                           condicoes: ["Manchas","Envelhecimento"], themeColor: "255,235,180", img: "https://cdn.shopify.com/s/files/1/0249/1218/products/goodal-green-tangerine-vita-c-dark-spot-serum-30ml-1.png", what: "Sérum de vitamina C concentrado para clarear e iluminar.", how: "Espalhe pelo rosto evitando a área dos olhos." },
+    { id: 303, name: "Peptide 500",              brand: "Mizon",     passo: "Tratamento", tipo_pele: ["Seca","Normal"],                   condicoes: ["Envelhecimento","Desidratação"], themeColor: "220,210,240", img: "https://cdn.shopify.com/s/files/1/0249/1218/products/mizon-peptide-500-1.png", what: "Soro focado em elasticidade e redução de linhas finas.", how: "Aplique na pele focando nas áreas com linhas." },
+
+    { id: 401, name: "Centella Soothing Cream",  brand: "SKIN1004",  passo: "Hidratação", tipo_pele: ["Oleosa","Mista","Todos"],          condicoes: ["Acne","Sensibilidade"],   themeColor: "175,210,190", img: "https://www.skin1004.com/cdn/shop/files/skin1004-75ml-madagascar-centella-soothing-cream-1204112523_1440x.png", what: "Creme em gel translúcido que hidrata e acalma instantaneamente.", how: "Aplique no rosto como penúltimo passo da rotina." },
+    { id: 402, name: "Hyaluronic Acid Moist",    brand: "Isntree",   passo: "Hidratação", tipo_pele: ["Seca","Normal"],                   condicoes: ["Desidratação","Envelhecimento"], themeColor: "195,220,245", img: "https://isntree.com/web/product/big/202302/10b9f5a0c3b06e8b408b04a919f91a0c.png", what: "Creme rico para selar a hidratação e recuperar a barreira.", how: "Espalhe uniformemente massageando até absorver." },
+
+    { id: 501, name: "Hyalu-Cica Water-Fit Sun", brand: "SKIN1004",  passo: "Proteção",   tipo_pele: ["Todos"],                           condicoes: ["Desidratação","Manchas","Envelhecimento"], themeColor: "185,215,205", img: "https://www.skin1004.com/cdn/shop/files/skin1004-50ml-hyalu-cica-water-fit-sun-serum-uv-1204112543_1440x.png?v=1762764544", what: "Protetor solar químico ultra-leve que parece um sérum.", how: "Aplique dois dedos do produto por todo rosto e pescoço pela manhã." }
+  ];
+
+  const perguntas = [
+    { q: "Com que frequência sua pele apresenta brilho excessivo?", multi: false,
+      options: [
+        { text: "Sempre",                  points: { pele_oleosa: 3 } },
+        { text: "Às vezes (Zona T)",        points: { pele_mista: 3 } },
+        { text: "Raramente",               points: { pele_normal: 2 } },
+        { text: "Nunca (Fica opaca)",       points: { pele_seca: 3 } }
+      ]
+    },
+    { q: "Após lavar o rosto, como sua pele se sente?", multi: false,
+      options: [
+        { text: "Oleosa rapidamente",                    points: { pele_oleosa: 2 } },
+        { text: "Repuxada e seca",                       points: { pele_seca: 3, desidratacao: 1 } },
+        { text: "Oleosa na zona T, seca no resto",       points: { pele_mista: 2 } },
+        { text: "Confortável",                           points: { pele_normal: 2 } }
+      ]
+    },
+    { q: "Com que frequência você tem espinhas ou cravos?", multi: false,
+      options: [
+        { text: "Frequentemente",              points: { acne: 3 } },
+        { text: "Apenas em períodos específicos", points: { acne: 1 } },
+        { text: "Quase nunca",                 points: {} }
+      ]
+    },
+    { q: "Você possui manchas escuras ou sardas que te incomodam?", multi: false,
+      options: [
+        { text: "Sim, bastante", points: { manchas: 3 } },
+        { text: "Poucas",        points: { manchas: 1 } },
+        { text: "Não",           points: {} }
+      ]
+    },
+    { q: "Sua pele reage facilmente a produtos novos, ficando vermelha?", multi: false,
+      options: [
+        { text: "Sempre reage", points: { sensibilidade: 3 } },
+        { text: "Às vezes",     points: { sensibilidade: 1 } },
+        { text: "Quase nunca",  points: {} }
+      ]
+    },
+    { q: "Você percebe linhas finas, rugas ou perda de firmeza?", multi: false,
+      options: [
+        { text: "Sim, me incomoda",              points: { envelhecimento: 3 } },
+        { text: "Estão começando a aparecer",    points: { envelhecimento: 1 } },
+        { text: "Ainda não percebo",             points: {} }
+      ]
+    },
+    { q: "Como estão os seus poros?", multi: false,
+      options: [
+        { text: "Muito visíveis no rosto todo",          points: { poros: 3 } },
+        { text: "Visíveis no nariz e bochechas",         points: { poros: 1 } },
+        { text: "Pouco visíveis",                        points: {} }
+      ]
+    },
+    { q: "Selecione tudo que te incomoda HOJE na sua pele:", multi: true, subtitle: "Pode selecionar mais de uma opção",
+      options: [
+        { text: "Acne e espinhas ativas",               points: { acne: 3 } },
+        { text: "Marcas escuras pós-acne",              points: { manchas: 2, acne: 1 } },
+        { text: "Manchas de sol, idade ou melasma",     points: { manchas: 3 } },
+        { text: "Poros dilatados e textura irregular",  points: { poros: 3 } },
+        { text: "Excesso de oleosidade e brilho",       points: { pele_oleosa: 2, poros: 1 } },
+        { text: "Pele ressecada, repuxando ou descamando", points: { desidratacao: 3, pele_seca: 1 } },
+        { text: "Vermelhidão, ardor ou pele sensível",  points: { sensibilidade: 3 } },
+        { text: "Linhas finas e rugas",                 points: { envelhecimento: 3 } },
+        { text: "Perda de firmeza e flacidez",          points: { envelhecimento: 2 } },
+        { text: "Pele opaca, cansada e sem viço",       points: { desidratacao: 1, manchas: 1 } }
+      ]
+    },
+    { q: "Qual o seu PRINCIPAL objetivo com a rotina de hoje?", multi: true, subtitle: "Pode selecionar mais de um",
+      options: [
+        { text: "Tratar espinhas e oleosidade", special_val: "Acne" },
+        { text: "Clarear manchas e iluminar",   special_val: "Manchas" },
+        { text: "Anti-idade e firmeza",         special_val: "Envelhecimento" },
+        { text: "Hidratar e recuperar a pele",  special_val: "Desidratação" },
+        { text: "Acalmar vermelhidão",          special_val: "Sensibilidade" }
+      ]
+    }
+  ];
+
+  // -----------------------------------------------
+  // Estado global
+  // -----------------------------------------------
+  let currentQ    = 0;
+  let userAnswers = {};
+  let finalRoutine = [];
+  let cart        = [];
+
+  // FIX #5 — instância do Swiper em escopo de módulo para evitar memory leak
+  let swiperInstance = null;
+
+  // -----------------------------------------------
+  // FIX #4 — Camada de análise (pura, testável)
+  // -----------------------------------------------
+  function analisarRespostas(respostas, questoes) {
+    const scores = {
+      pele_oleosa:0, pele_seca:0, pele_mista:0, pele_normal:0,
+      acne:0, manchas:0, sensibilidade:0, desidratacao:0, envelhecimento:0, poros:0
+    };
+    const prioridades = [];
+
+    for (const qIndex in respostas) {
+      respostas[qIndex].forEach(optIndex => {
+        const opt = questoes[qIndex].options[optIndex];
+        if (opt.points) {
+          Object.entries(opt.points).forEach(([key, val]) => { scores[key] += val; });
+        }
+        if (opt.special_val) prioridades.push(opt.special_val);
+      });
+    }
+    return { scores, prioridades };
+  }
+
+  function determinarTipoPele(scores) {
+    return [
+      { id: "Oleosa", s: scores.pele_oleosa },
+      { id: "Seca",   s: scores.pele_seca   },
+      { id: "Mista",  s: scores.pele_mista  },
+      { id: "Normal", s: scores.pele_normal }
+    ].sort((a, b) => b.s - a.s)[0].id;
+  }
+
+  function rankearCondicoes(scores, prioridades) {
+    const condicoes = [
+      { id: "Acne",          s: scores.acne          },
+      { id: "Manchas",       s: scores.manchas       },
+      { id: "Sensibilidade", s: scores.sensibilidade },
+      { id: "Desidratação",  s: scores.desidratacao  },
+      { id: "Envelhecimento",s: scores.envelhecimento},
+      { id: "Poros",         s: scores.poros         }
+    ]
+      .filter(d => d.s >= 1)
+      .sort((a, b) => b.s - a.s)
+      .slice(0, 3)
+      .map(d => d.id);
+
+    prioridades.forEach(p => {
+      if (!condicoes.includes(p)) condicoes.unshift(p);
+    });
+    return condicoes;
+  }
+
+  // FIX #4 — Camada de matching: fácil de trocar por fetch() futuramente
+  async function buscarRotina(perfil) {
+    // HOJE: filtra localmente
+    // AMANHÃ: return await fetch(`/api/routine?skin=${perfil.tipo}&conditions=${perfil.condicoes.join(',')}`)
+    const ORDEM_PASSOS = ["Limpeza", "Tônico", "Tratamento", "Hidratação", "Proteção"];
+
+    return ORDEM_PASSOS.map(passo => {
+      const compativeis = BANCO_DE_PRODUTOS.filter(p =>
+        p.passo === passo &&
+        (p.tipo_pele.includes(perfil.tipo) || p.tipo_pele.includes("Todos"))
+      );
+      return (
+        compativeis.find(p => p.condicoes.some(c => perfil.condicoes.includes(c)))
+        || compativeis[0]
+        || null
+      );
+    }).filter(Boolean);
+  }
+
+  // -----------------------------------------------
+  // Quiz render
+  // -----------------------------------------------
+  function renderQuiz() {
+    const qData = perguntas[currentQ];
+    const total = perguntas.length;
+    const pct   = Math.round(((currentQ + 1) / total) * 100);
+
+    document.getElementById('step-count').textContent = currentQ + 1;
+
+    const fill = document.getElementById('progress');
+    fill.style.width = `${pct}%`;
+
+    // Atualizar role do grupo conforme tipo de questão
+    const optionsEl = document.getElementById('q-options');
+    optionsEl.setAttribute('role',            qData.multi ? 'group' : 'radiogroup');
+    optionsEl.setAttribute('aria-labelledby', 'q-title');
+
+    const bar = document.getElementById('progress-bar');
+    bar.setAttribute('aria-valuenow', pct);
+
+    document.getElementById('q-title').textContent    = qData.q;
+    document.getElementById('q-subtitle').textContent = qData.subtitle || '';
+
+    const savedAnswers = userAnswers[currentQ] || [];
+
+    document.getElementById('q-options').innerHTML = qData.options.map((opt, index) => {
+      const isSelected = savedAnswers.includes(index);
+      const role       = qData.multi ? 'checkbox' : 'radio';
+      return `
+        <button
+          class="option-btn interactive-btn ${isSelected ? 'selected' : ''}"
+          onclick="toggleOption(${index})"
+          role="${role}"
+          aria-checked="${isSelected}"
+        >
+          ${opt.text}
+          <div class="circle-check" aria-hidden="true"></div>
+        </button>`;
+    }).join('');
+
+    document.getElementById('btn-prev').style.visibility = currentQ === 0 ? 'hidden' : 'visible';
+
+    const btnNext = document.getElementById('btn-next');
+    btnNext.textContent = currentQ === total - 1 ? 'Finalizar Análise' : 'Avançar';
+
+    // FIX #1 — disabled como atributo HTML real
+    if (savedAnswers.length > 0) {
+      btnNext.classList.add('active');
+      btnNext.removeAttribute('disabled');
+    } else {
+      btnNext.classList.remove('active');
+      btnNext.setAttribute('disabled', 'true');
+    }
+  }
+
+  function toggleOption(index) {
+    const isMulti = perguntas[currentQ].multi;
+    if (!userAnswers[currentQ]) userAnswers[currentQ] = [];
+
+    if (isMulti) {
+      const pos = userAnswers[currentQ].indexOf(index);
+      pos > -1
+        ? userAnswers[currentQ].splice(pos, 1)
+        : userAnswers[currentQ].push(index);
+    } else {
+      userAnswers[currentQ] = [index];
+    }
+    renderQuiz();
+  }
+
+  function goNext() {
+    if (!userAnswers[currentQ] || userAnswers[currentQ].length === 0) return;
+    if (currentQ < perguntas.length - 1) { currentQ++; renderQuiz(); }
+    else { iniciarCalculo(); }
+  }
+
+  function goPrev() {
+    if (currentQ > 0) { currentQ--; renderQuiz(); }
+  }
+
+  // -----------------------------------------------
+  // Orquestrador — só controla UI
+  // -----------------------------------------------
+  async function iniciarCalculo() {
+    const quizView = document.getElementById('quiz-view');
+    quizView.style.opacity = '0';
+    await new Promise(r => setTimeout(r, 500));
+    quizView.style.display = 'none';
+
+    const loadingView = document.getElementById('loading-view');
+    loadingView.style.display = 'flex';
+
+    // Análise
+    const { scores, prioridades } = analisarRespostas(userAnswers, perguntas);
+    const tipo      = determinarTipoPele(scores);
+    const condicoes = rankearCondicoes(scores, prioridades);
+
+    finalRoutine = await buscarRotina({ tipo, condicoes });
+
+    await new Promise(r => setTimeout(r, 2500));
+
+    loadingView.style.display = 'none';
+    const resultView = document.getElementById('result-view');
+    resultView.style.display = 'flex';
+    renderizarSwiper();
+  }
+
+  // -----------------------------------------------
+  // FIX #2 + FIX #5 — Swiper robusto + themeColor
+  // -----------------------------------------------
+  function updateTheme(index) {
+    const produto = finalRoutine[index];
+    if (!produto) return;
+    const aura  = document.getElementById('aura');
+    const color = produto.themeColor || '200,200,200';
+    aura.style.background =
+      `radial-gradient(circle, rgba(${color}, 0.45) 0%, transparent 70%)`;
+  }
+
+  function renderizarSwiper() {
+    const wrapper = document.getElementById('wrapper');
+
+    wrapper.innerHTML = finalRoutine.map((p, i) => `
+      <div class="swiper-slide">
+        <div class="title-group">
+          <h2>${p.name}</h2>
+          <div class="brand">${p.brand} | ${p.passo}</div>
+        </div>
+        <div class="img-container">
+          <div class="product-img-wrapper">
+            <div class="product-img-placeholder" id="placeholder-${i}" aria-hidden="true">
+              <span>Carregando</span>
+            </div>
+            <!-- FIX: button wrapper torna a imagem acessível por teclado -->
+            <button
+              class="img-btn"
+              onclick="openDetails(${i})"
+              aria-label="Ver detalhes de ${p.name}"
+              style="background:none;border:none;cursor:pointer;width:100%;height:100%;display:flex;align-items:center;justify-content:center;"
+            >
+              <img
+                src="${p.img}"
+                id="img-prod-${i}"
+                class="product-img"
+                alt="${p.name} por ${p.brand}"
+                loading="${i === 0 ? 'eager' : 'lazy'}"
+              >
+            </button>
+          </div>
+        </div>
+        <div class="footer-content">
+          <button class="btn-pill" onclick="add(${i})" aria-label="Adicionar ${p.name} à sua rotina">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+            Adicionar à rotina
+          </button>
+        </div>
+      </div>`).join('');
+
+    // FIX #2 — listener de load por imagem (auto-remove com { once: true })
+    finalRoutine.forEach((_, i) => {
+      const img         = document.getElementById(`img-prod-${i}`);
+      const placeholder = document.getElementById(`placeholder-${i}`);
+      if (!img) return;
+
+      const onLoad = () => {
+        img.classList.add('loaded');
+        placeholder.classList.add('hidden');
+        // Atualiza tema se for o slide ativo
+        if (swiperInstance && swiperInstance.activeIndex === i) updateTheme(i);
+      };
+
+      if (img.complete && img.naturalWidth > 0) {
+        onLoad();
+      } else {
+        img.addEventListener('load',  onLoad, { once: true });
+        img.addEventListener('error', () => {
+          // FIX #2 — imagem quebrada: esconde placeholder com mensagem
+          placeholder.innerHTML = '<span style="font-size:10px;color:#aaa;">Imagem indisponível</span>';
+        }, { once: true });
+      }
+    });
+
+    // FIX #5 — destruir instância anterior antes de criar nova (sem memory leak)
+    if (swiperInstance) {
+      swiperInstance.destroy(true, true);
+      swiperInstance = null;
+    }
+
+    swiperInstance = new Swiper('.mySwiper', {
+      direction: 'vertical',
+      speed: 800,
+      threshold: 10, // FIX #5 — evita disparo acidental em swipe rápido
+      on: {
+        // FIX #5 — recebe instância como argumento (sem this ambíguo)
+        slideChangeTransitionEnd(swiper) {
+          const i = swiper.activeIndex;
+          updateTheme(i);
+          // FIX — textContent em vez de innerHTML (mais seguro)
+          document.getElementById('step-text').textContent = `${i + 1}º PASSO`;
+        }
+      }
+    });
+
+    updateTheme(0);
+    document.getElementById('step-text').textContent = '1º PASSO';
+  }
+
+  // -----------------------------------------------
+  // Carrinho
+  // -----------------------------------------------
+  function add(i) {
+    const p = finalRoutine[i];
+    if (!p || cart.find(item => item.id === p.id)) return;
+    cart.push({ ...p, step: i + 1 });
+
+    const badge = document.getElementById('cart-badge');
+    badge.textContent = cart.length;
+    badge.style.display = 'flex';
+    // FIX #1 — atualizar aria-label do botão do carrinho
+    document.querySelector('.cart-mini').setAttribute('aria-label', `Ver minha rotina — ${cart.length} produto(s)`);
+  }
+
+  // -----------------------------------------------
+  // FIX #2 — Focus Trap + retorno de foco (WCAG 2.1.2 / 2.4.3)
+  // -----------------------------------------------
+  const FOCUSABLE = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+  let lastFocusedElement = null;
+
+  function trapFocus(overlayEl) {
+    const focusable = Array.from(overlayEl.querySelectorAll(FOCUSABLE));
+    if (!focusable.length) return;
+
+    // Mover foco para o primeiro elemento do dialog
+    focusable[0].focus();
+
+    overlayEl._trapHandler = function(e) {
+      if (e.key !== 'Tab') return;
+      const first = focusable[0];
+      const last  = focusable[focusable.length - 1];
+
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+      } else {
+        if (document.activeElement === last)  { e.preventDefault(); first.focus(); }
+      }
+    };
+
+    // Fechar com Escape
+    overlayEl._escHandler = function(e) {
+      if (e.key === 'Escape') {
+        if (overlayEl.id === 'detail-overlay') closeDetails();
+        if (overlayEl.id === 'bag-overlay')    closeBag();
+      }
+    };
+
+    overlayEl.addEventListener('keydown', overlayEl._trapHandler);
+    document.addEventListener('keydown',  overlayEl._escHandler);
+  }
+
+  function releaseFocus(overlayEl) {
+    if (overlayEl._trapHandler) {
+      overlayEl.removeEventListener('keydown', overlayEl._trapHandler);
+      delete overlayEl._trapHandler;
+    }
+    if (overlayEl._escHandler) {
+      document.removeEventListener('keydown', overlayEl._escHandler);
+      delete overlayEl._escHandler;
+    }
+    // Devolver foco ao elemento que abriu o modal
+    if (lastFocusedElement) {
+      lastFocusedElement.focus();
+      lastFocusedElement = null;
+    }
+  }
+
+  function openDetails(i) {
+    const p = finalRoutine[i];
+    if (!p) return;
+    lastFocusedElement = document.activeElement; // salva foco atual
+    document.getElementById('d-title').textContent = p.name;
+    document.getElementById('d-what').textContent  = p.what;
+    document.getElementById('d-how').textContent   = p.how;
+    document.getElementById('btn-add-detail').onclick = () => { add(i); closeDetails(); };
+    const overlay = document.getElementById('detail-overlay');
+    overlay.classList.add('active');
+    // Aguarda transição CSS antes de mover foco
+    setTimeout(() => trapFocus(overlay), 50);
+  }
+
+  function closeDetails() {
+    const overlay = document.getElementById('detail-overlay');
+    overlay.classList.remove('active');
+    releaseFocus(overlay);
+  }
+
+  function openBag() {
+    lastFocusedElement = document.activeElement;
+    const list = document.getElementById('bag-list');
+
+    if (cart.length === 0) {
+      list.innerHTML = '<div style="text-align:center; padding-top:50px; color:#999;">Sua rotina está vazia</div>';
+    } else {
+      list.innerHTML = cart.map(item => `
+        <div class="bag-item">
+          <div class="bag-item-num" aria-hidden="true">${item.step}</div>
+          <div style="flex:1;">
+            <h5 style="font-size:14px;">${item.name}</h5>
+            <div style="font-size:11px; color:#888">${item.passo}</div>
+          </div>
+          <button
+            data-remove-id="${item.id}"
+            style="background:none; border:none; color:#CCC; cursor:pointer; font-size:16px; padding:4px 8px;"
+            aria-label="Remover ${item.name} da rotina"
+          >✕</button>
+        </div>`).join('');
+
+      // FIX #5 — delega eventos em vez de re-renderizar ao remover
+      list.querySelectorAll('[data-remove-id]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = Number(btn.dataset.removeId);
+          removeItem(id, btn); // passa referência para retorno de foco
+        });
+      });
+    }
+
+    const overlay = document.getElementById('bag-overlay');
+    overlay.classList.add('active');
+    setTimeout(() => trapFocus(overlay), 50);
+  }
+
+  function closeBag() {
+    const overlay = document.getElementById('bag-overlay');
+    overlay.classList.remove('active');
+    releaseFocus(overlay);
+  }
+
+  function removeItem(id, triggerBtn) {
+    cart = cart.filter(i => i.id !== id);
+
+    const badge = document.getElementById('cart-badge');
+    badge.textContent = cart.length;
+    if (cart.length === 0) {
+      badge.style.display = 'none';
+      document.querySelector('.cart-mini').setAttribute('aria-label', 'Ver minha rotina');
+    } else {
+      document.querySelector('.cart-mini').setAttribute('aria-label', `Ver minha rotina — ${cart.length} produto(s)`);
+    }
+
+    // FIX #5 — remove item do DOM sem re-renderizar tudo
+    const itemEl = triggerBtn?.closest('.bag-item');
+    if (itemEl) {
+      // Move foco para o item anterior ou para o próximo antes de remover
+      const items   = Array.from(document.querySelectorAll('[data-remove-id]'));
+      const idx     = items.indexOf(triggerBtn);
+      const nextFocus = items[idx + 1] || items[idx - 1];
+      itemEl.remove();
+      if (nextFocus) nextFocus.focus();
+      else document.querySelector('#bag-overlay .btn-close')?.focus();
+    }
+
+    if (cart.length === 0) {
+      document.getElementById('bag-list').innerHTML =
+        '<div style="text-align:center; padding-top:50px; color:#999;">Sua rotina está vazia</div>';
+    }
+  }
+
+  // Inicia o quiz ao carregar
+  window.onload = renderQuiz;
+  </script>
+</body>
+</html>
